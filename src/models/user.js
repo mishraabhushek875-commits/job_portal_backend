@@ -28,6 +28,15 @@ role:{
       enum: ['jobseeker', 'recruiter'],
       default: 'jobseeker',
 },
+// Existing fields ke baad add karo
+resume: {
+  url: { type: String, default: '' },
+  publicId: { type: String, default: '' },
+},
+photo: {
+  url: { type: String, default: '' },
+  publicId: { type: String, default: '' },
+},
 },
 {
 

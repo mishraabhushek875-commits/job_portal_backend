@@ -6,10 +6,14 @@ export const initSocket = (io) => {
   io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
 
+    //Har user ka ek unique socket.id hota ha
+
     // ─── User apne room mein join kare ───
     socket.on('join', (userId) => {
       socket.join(userId);
       onlineUsers.set(userId, socket.id);
+//Ye batata hai kaun online hai
+
       console.log(`User ${userId} joined their room`);
     });
 
@@ -17,6 +21,7 @@ export const initSocket = (io) => {
     socket.on('disconnect', () => {
       // Online users mein se hata do
       for (const [userId, socketId] of onlineUsers.entries()) {
+        //Socket id match karo → user remove karo
         if (socketId === socket.id) {
           onlineUsers.delete(userId);
           console.log(`User ${userId} disconnected`);

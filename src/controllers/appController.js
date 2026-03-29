@@ -1,10 +1,17 @@
 import Application from '../models/application.js';
 import Job from '../models/job.js';
+import User from '../models/user.js'; // ← ZAROORI: User import add kiya
 
 import {      
   notifyNewApplication,
   notifyStatusChange,
 } from '../services/notificationServices.js';
+// Imports mein add karo
+import {
+  sendApplicationConfirmation,
+  sendNewApplicationAlert,
+  sendStatusUpdateEmail,
+} from '../services/emailServices.js';
 
 
 // ─── 1. JOB MEIN APPLY KARO ───
@@ -12,9 +19,9 @@ import {
 export const applyJob = async (req, res) => {
   try {
     const { coverLetter } = req.body;
-    //req.body tab use  krte hai jB HUME DATA JO HAI USER S ELENA PADTA HAI FRONTEND SE 
+    //req.body tab use krte hai jab hume data jo hai user se lena padta hai frontend se 
     const jobId = req.params.jobId;
-    //req.params ka use tab krte hai jab url se i koi data lena hota hai jaise id wagera 
+    //req.params ka use tab krte hai jab url se koi data lena hota hai jaise id wagera 
 
     // 1. Job exist karti hai?
     const job = await Job.findById(jobId);
@@ -53,14 +60,31 @@ export const applyJob = async (req, res) => {
       .populate('job', 'title company location')
       .populate('applicant', 'name email');
 
-
-
-    // ─── Recruiter ko notify karo ← sockets ───yha par user aplly krega ar uska notification recruiter ko jayega 
+    // ─── Recruiter ko notify karo ← sockets ─── yha par user apply krega ar uska notification recruiter ko jayega 
     notifyNewApplication(
       job.recruiter.toString(),
       job.title,
       req.user.name
     );
+
+    // ─── Email: Applicant ko confirmation ───
+    await sendApplicationConfirmation(
+      req.user.email,
+      req.user.name,
+      job.title,
+      job.company
+    );
+
+    // ─── Email: Recruiter ko alert ───
+    const recruiter = await User.findById(job.recruiter);
+    if (recruiter) {
+      await sendNewApplicationAlert(
+        recruiter.email,
+        recruiter.name,
+        req.user.name,
+        job.title
+      );
+    }
 
     res.status(201).json({
       success: true,
@@ -159,21 +183,31 @@ export const updateApplicationStatus = async (req, res) => {
 
     /*
     // Status update mein save() use kiya kyunki:
-application.status = status;
-await application.save(); // pre save hooks chalenge
+    application.status = status;
+    await application.save(); // pre save hooks chalenge
 
-// findByIdAndUpdate mein hooks nahi chalte!
-// Isliye jab bhi hooks chahiye → save() use karo
+    // findByIdAndUpdate mein hooks nahi chalte!
+    // Isliye jab bhi hooks chahiye → save() use karo
     */
 
-
- // ─── Applicant ko notify karo ← NAYA ───
+    // ─── Applicant ko notify karo ← sockets ───
     notifyStatusChange(
       application.applicant.toString(),
       application.job.title,
       status
     );
-    
+
+    // ─── Email: Applicant ko status update email ───
+    const applicant = await User.findById(application.applicant);
+    if (applicant) {
+      await sendStatusUpdateEmail(
+        applicant.email,
+        applicant.name,
+        application.job.title,
+        status
+      );
+    }
+
     res.status(200).json({
       success: true,
       message: `Status update ho gaya: ${status}`,
@@ -221,7 +255,6 @@ export const withdrawApplication = async (req, res) => {
 
 /*
 ### `error.code === 11000` kya hai?
-```
 MongoDB ka duplicate error code hai!
 Compound index ne block kiya — same user same job mein dobara apply kiya
 11000 = Duplicate Key Error

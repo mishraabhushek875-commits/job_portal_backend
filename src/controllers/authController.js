@@ -1,6 +1,34 @@
 import User from '../models/user.js'
 import jwt from 'jsonwebtoken'
 
+/*
+=====================================
+(eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjEyMyJ9.SIGNATURE
+─────────────────────────────────────────────────
+      Header          Payload      Signature
+
+Header   → Konsa algorithm use hua (HS256)
+Payload  → { id: "abc123" } — user ka ID
+Signature → Secret key se bana — tamper-proof)======================================
+Bank ne tumhe ek Token/Slip di — "Yeh banda verified hai"
+        ↓
+Ab tum bank ke kisi bhi kaam mein woh slip dikhao
+        ↓
+Bank ne slip check ki — valid hai ✅
+        ↓
+Kaam ho gaya — bina dobara password maange
+======================================
+Koi bhi Payload dekh sakta hai — yeh encoded hai, encrypted nahi
+        ↓
+Koi badmash ne payload badla — id: "admin123"
+        ↓
+Signature match nahi karega ← secret key sirf server ko pata hai
+        ↓
+Server reject kar dega ✅
+*/
+
+//generateToken — ek function jo userId lega aur token return karega
+
 //____jwt token Banao _______//
 const generateToken=(userId)=>{
   return jwt.sign(

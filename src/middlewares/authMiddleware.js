@@ -12,7 +12,7 @@ export const protect = async (req, res, next) => {
 
     // 2. Token mila nahi toh reject karo
     if (!token) {
-      return res.status(401).json({ message: 'Login karo pehle' });
+      return res.status(401).json({ message: ' Login first ' });
     }
 
 

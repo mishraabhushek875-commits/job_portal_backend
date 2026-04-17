@@ -1,4 +1,5 @@
 import Job from '../models/job.js';
+import SearchHistory from '../models/SearchHistory.js';
 
 // ─── 1. JOB POST KARO ───
 // POST /api/jobs
@@ -13,7 +14,10 @@ export const createJob = async (req, res) => {
       location,
       salary,
       jobType,
-      skills,
+      //ye hum yha isliye kr rhe taki frotend se jo dsta aye vo clean aye shi format me convdrt hokr 
+      skills: req.body.skills
+  .split(',')
+  .map(s => s.trim().toLowerCase()),
       recruiter: req.user.id, // logged in recruiter ka id
     });
 
@@ -60,8 +64,30 @@ export const getAllJobs = async (req, res) => {
 
     // Skills filter
     if (skills) {
-      filter.skills = { $in: skills.split(',') };
+  const skillArray = skills
+    .split(',')
+    .map(s => s.trim().toLowerCase());
+
+  filter.skills = {
+    $elemMatch: {
+      $regex: skillArray.join('|'),
+      $options: 'i'
     }
+  };
+}
+
+    // Yeh block add karo getAllJobs mein
+// Login hai aur keyword search kiya hai to history save karo
+if (req.user && keyword) {
+  SearchHistory.create({
+    userId:   req.user.id,
+    keyword:  keyword  || '',
+    location: location || '',
+    skills:   skills ? skills.split(',') : []
+  })
+  // .catch(() => {}) — agar save fail ho
+  // to main search rukni nahi chahiye
+}
 
     const jobs = await Job.find(filter)
       .populate('recruiter', 'name email') // recruiter ka naam aur email

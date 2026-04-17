@@ -26,12 +26,12 @@ export const applyJob = async (req, res) => {
     // 1. Job exist karti hai?
     const job = await Job.findById(jobId);
     if (!job) {
-      return res.status(404).json({ message: 'Job nahi mili' });
+      return res.status(404).json({ message: 'Job not found' });
     }
 
     // 2. Job open hai?
     if (job.status === 'closed') {
-      return res.status(400).json({ message: 'Yeh job closed hai' });
+      return res.status(400).json({ message: 'This job is closed' });
     }
 
     // 3. Recruiter apni job mein apply na kar sake
@@ -45,7 +45,7 @@ export const applyJob = async (req, res) => {
       applicant: req.user.id,
     });
     if (alreadyApplied) {
-      return res.status(400).json({ message: 'Tum pehle se apply kar chuke ho' });
+      return res.status(400).json({ message: 'you have already' });
     }
 
     // 5. Application banao
@@ -108,7 +108,7 @@ export const getMyApplications = async (req, res) => {
     const applications = await Application.find({ applicant: req.user.id })
       .populate('job', 'title company location salary jobType status')
       .sort({ createdAt: -1 });
-
+              
     res.status(200).json({
       success: true,
       count: applications.length,
@@ -129,12 +129,12 @@ export const getJobApplications = async (req, res) => {
 
     // Job exist karti hai?
     if (!job) {
-      return res.status(404).json({ message: 'Job nahi mili' });
+      return res.status(404).json({ message: 'Job not exist' });
     }
 
     // Sirf us job ka recruiter dekh sake
-    if (job.recruiter.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Permission nahi hai' });
+    if (job.recruiter.toString() !== req.user.id) {//yha ye req.user.idkisliy use ho rha kya dirrnece hiaisem or abaki me 
+      return res.status(403).json({ message: 'Permission denied' });
     }
 
     const applications = await Application.find({ job: req.params.jobId })
@@ -158,7 +158,7 @@ export const getJobApplications = async (req, res) => {
 // Sirf recruiter status change kar sakta hai
 export const updateApplicationStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status } = req.body;  
 
     // Valid status hai?
     const validStatus = ['pending', 'reviewed', 'shortlisted', 'rejected'];
@@ -170,12 +170,12 @@ export const updateApplicationStatus = async (req, res) => {
       .populate('job');
 
     if (!application) {
-      return res.status(404).json({ message: 'Application nahi mili' });
+      return res.status(404).json({ message: 'Application not found' });
     }
 
     // Sirf us job ka recruiter status change kar sake
     if (application.job.recruiter.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Permission nahi hai' });
+      return res.status(403).json({ message: 'Permission not allowed' });
     }
 
     application.status = status;

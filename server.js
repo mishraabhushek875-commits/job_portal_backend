@@ -9,6 +9,7 @@ import applicationRoutes from './src/routes/applicationRoutes.js'
 import authRoutes from './src/routes/authRoutes.js'
 import jobRoutes from './src/routes/jobRoutes.js'
 import {initSocket} from './src/socket/socketHandler.js'
+import aiRoutes from './src/routes/aiRoutes.js';
 
 
 //databse and env connect
@@ -40,6 +41,7 @@ app.use(express.json());
 app.use('/api/auth',authRoutes);
 app.use('/api/applications',applicationRoutes);
 app.use('/api/jobs',jobRoutes);
+app.use('/api/ai', aiRoutes);
 
 
 
